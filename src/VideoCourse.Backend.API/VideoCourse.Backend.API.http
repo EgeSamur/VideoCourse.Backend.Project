@@ -1,0 +1,6 @@
+@VideoCourse.Backend.API_HostAddress = http://localhost:5241
+
+GET {{VideoCourse.Backend.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

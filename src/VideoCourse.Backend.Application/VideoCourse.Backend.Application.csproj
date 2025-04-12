@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="13.0.1" />
+		<PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.301" />
+		<PackageReference Include="AWSSDK.S3" Version="3.7.405.6" />
+		<PackageReference Include="ClosedXML" Version="0.104.1" />
+		<PackageReference Include="Google.Cloud.VideoIntelligence.V1" Version="3.4.0" />
+		<PackageReference Include="Google.Cloud.Vision.V1" Version="3.7.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8" />
+		<PackageReference Include="NetTopologySuite" Version="2.5.0" />
+		<PackageReference Include="Npgsql.NetTopologySuite" Version="8.0.0" />
+		<PackageReference Include="Twilio" Version="7.8.5" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\VideoCourse.Backend.Domain\VideoCourse.Backend.Domain.csproj" />
+	</ItemGroup>
+</Project>
