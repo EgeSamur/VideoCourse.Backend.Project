@@ -16,7 +16,7 @@ public class User : BaseEntity
     public DateTime? LastLoginDate { get; set; }
 
     // Navigation properties
-    public ICollection<UserCourse> EnrolledCourses { get; set; } = new List<UserCourse>();
-    public ICollection<VideoProgress> VideoProgresses { get; set; } = new List<VideoProgress>();
-    public ICollection<Payment> Payments { get; set; } = new List<Payment>();
+    public ICollection<UserCourse> EnrolledCourses { get; set; } 
+    public ICollection<VideoProgress> VideoProgresses { get; set; } 
+    public ICollection<Payment> Payments { get; set; } 
 }

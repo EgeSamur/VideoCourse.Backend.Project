@@ -12,6 +12,6 @@ public class VideoProgress : BaseEntity
     public DateTime LastWatchedDate { get; set; } = DateTime.UtcNow;
 
     // Navigation properties
-    public User User { get; set; } = new User();
-    public Video Video { get; set; } = new Video();
+    public User User { get; set; }
+    public Video Video { get; set; } 
 }

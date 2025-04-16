@@ -77,7 +77,9 @@ public class VideoService  : IVideoService
                DurationInSeconds = x.DurationInSeconds,
                VideoUrl = x.VideoUrl
            }
-           , size: pageRequest.Size,
+           ,
+           orderBy: q => q.OrderBy(x => x.Id),
+           size: pageRequest.Size,
            index: pageRequest.Index,
            isAll: pageRequest.IsAll);
         var result = _mapper.Map<PaginatedResponse<VideoDto>>(videos);

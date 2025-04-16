@@ -12,6 +12,6 @@ public class Video : BaseEntity
     public string ThumbnailUrl { get; set; } = String.Empty;
 
     // Navigation properties
-    public ICollection<SectionVideo> VideoSections { get; set; } = new List<SectionVideo>();
-    public ICollection<VideoProgress> UserProgresses { get; set; } = new List<VideoProgress>();
+    public ICollection<CourseSectionVideo> CourseSectionVideos { get; set; } 
+    public ICollection<VideoProgress> UserProgresses { get; set; }
 }

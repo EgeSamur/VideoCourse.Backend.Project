@@ -64,4 +64,10 @@ public class CourseSectionsController : ControllerBase
         var result = await _courseSectionService.DeleteVideoFromCourseSectionAsync(dto);
         return Ok(result);
     }
+    [HttpPut("swap-videos")]
+    public async Task<IActionResult> SwapVideos([FromBody] SwapSectionVideosDto dto)
+    {
+        var result = await _courseSectionService.SwapSectionVideos(dto);
+        return Ok(result);
+    }
 }

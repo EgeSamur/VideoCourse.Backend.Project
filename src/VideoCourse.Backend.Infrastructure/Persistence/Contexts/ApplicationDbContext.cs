@@ -13,7 +13,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Video> Videos { get; set; }
     public DbSet<Course> Courses { get; set; }
     public DbSet<CourseSection> CourseSections { get; set; }
-    public DbSet<SectionVideo> SectionVideos { get; set; }
+    public DbSet<CourseSectionVideo> CourseSectionVideos { get; set; }
+    public DbSet<CourseCourseSection> CourseCourseSections { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> dbContextOptions)
         : base(dbContextOptions)

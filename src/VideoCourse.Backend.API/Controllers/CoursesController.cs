@@ -40,7 +40,7 @@ public class CoursesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] PageRequest pageRequest)
     {
-        var result = await _courseService.GetVideoSectionsAsync(pageRequest);
+        var result = await _courseService.GetCoursesAsync(pageRequest);
         return Ok(result);
     }
 
@@ -64,4 +64,12 @@ public class CoursesController : ControllerBase
         var result = await _courseService.DeleteSectionsFromCourse(dto);
         return Ok(result);
     }
+
+    [HttpPut("swap-sections")]
+    public async Task<IActionResult> SwapSections([FromBody] SwapCourseSectionDto dto)
+    {
+        var result = await _courseService.SwapCourseSection(dto);
+        return Ok(result);
+    }
+
 }

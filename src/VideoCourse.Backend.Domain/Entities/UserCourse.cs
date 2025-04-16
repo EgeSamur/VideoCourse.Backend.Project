@@ -11,6 +11,6 @@ public class UserCourse : BaseEntity
     public bool IsCompleted { get; set; } = false;
 
     // Navigation properties
-    public User User { get; set; } = new User();
-    public Course Course { get; set; } = new Course();
+    public User User { get; set; }
+    public Course Course { get; set; }
 }

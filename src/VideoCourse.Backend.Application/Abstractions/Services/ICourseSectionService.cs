@@ -10,6 +10,7 @@ public interface ICourseSectionService
     Task<IResult> AddVideosToCourseSection(AddVideosCourseSectionDto dto);
     Task<IDataResult<CourseSectionDto>> GetByIdAsync(int id);
     Task<IDataResult<PaginatedResponse<CourseSectionDto>>> GetVideoSectionsAsync(PageRequest pageRequest);
+    Task<IDataResult<CourseSectionDto>> SwapSectionVideos(SwapSectionVideosDto dto);
     Task<IResult> DeleteVideoFromCourseSectionAsync(DeleteVideosFromCourseSectionDto dto); 
     Task<IResult> DeleteAsync(int id);
 }

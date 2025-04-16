@@ -6,7 +6,11 @@ namespace VideoCourse.Backend.Infrastructure.Persistence.Repositories.Base;
 
 public class UnitOfWork : IUnitOfWork
 {
-    public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ICourseRepository courseRepository, IPaymentRepository paymentRepository, IUserCourseRepository userCourseRepository, IVideoProgressRepository videoProgressRepository, IVideoRepository videoRepository, ICourseSectionRepository courseSectionRepository, ISectionVideoRepository sectionVideoRepository)
+    public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository,
+        ICourseRepository courseRepository, IPaymentRepository paymentRepository,
+        IUserCourseRepository userCourseRepository, IVideoProgressRepository videoProgressRepository,
+        IVideoRepository videoRepository, ICourseSectionRepository courseSectionRepository,
+        ICourseCourseSectionRepository courseCourseSectionRepository, ICourseSectionVideoRepository ýCourseSectionVideoRepository)
     {
         _context = context;
         UserRepository = userRepository;
@@ -16,7 +20,8 @@ public class UnitOfWork : IUnitOfWork
         VideoProgressRepository = videoProgressRepository;
         VideoRepository = videoRepository;
         CourseSectionRepository = courseSectionRepository;
-        SectionVideoRepository = sectionVideoRepository;
+        CourseCourseSectionRepository = courseCourseSectionRepository;
+        ICourseSectionVideoRepository = ýCourseSectionVideoRepository;
     }
 
     private readonly ApplicationDbContext _context;
@@ -24,11 +29,12 @@ public class UnitOfWork : IUnitOfWork
     public IUserRepository UserRepository { get; }
     public ICourseRepository CourseRepository { get; }
     public ICourseSectionRepository CourseSectionRepository { get; }
-    public ISectionVideoRepository SectionVideoRepository { get; }
+    public ICourseSectionVideoRepository ICourseSectionVideoRepository { get; }
     public IPaymentRepository PaymentRepository { get; }
     public IUserCourseRepository UserCourseRepository { get; }
     public IVideoProgressRepository VideoProgressRepository { get; }
     public IVideoRepository VideoRepository { get; }
+    public ICourseCourseSectionRepository CourseCourseSectionRepository { get; }
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await _context.SaveChangesAsync(cancellationToken);

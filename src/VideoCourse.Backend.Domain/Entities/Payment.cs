@@ -13,5 +13,5 @@ public class Payment : BaseEntity
     public bool IsSuccessful { get; set; }
 
     // Navigation property
-    public User User { get; set; } = new User();
+    public User User { get; set; }
 }

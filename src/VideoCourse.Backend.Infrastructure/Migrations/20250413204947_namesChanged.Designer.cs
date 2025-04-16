@@ -12,8 +12,8 @@ using VideoCourse.Backend.Infrastructure.Persistence.Contexts;
 namespace VideoCourse.Backend.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250412095221_initial_create")]
-    partial class initial_create
+    [Migration("20250413204947_namesChanged")]
+    partial class namesChanged
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -76,10 +76,13 @@ namespace VideoCourse.Backend.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Title")
+                        .IsUnique();
+
                     b.ToTable("courses", (string)null);
                 });
 
-            modelBuilder.Entity("VideoCourse.Backend.Domain.Entities.CourseVideo", b =>
+            modelBuilder.Entity("VideoCourse.Backend.Domain.Entities.CourseCourseSection", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -91,6 +94,107 @@ namespace VideoCourse.Backend.Infrastructure.Migrations
                     b.Property<int>("CourseId")
                         .HasColumnType("integer")
                         .HasColumnName("course_id");
+
+                    b.Property<int>("CourseSectionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("course_section_id");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<int?>("CreatedUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("order_index");
+
+                    b.Property<DateTimeOffset?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.Property<int?>("UpdatedUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("updated_user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseSectionId");
+
+                    b.HasIndex("CourseId", "CourseSectionId")
+                        .IsUnique();
+
+                    b.HasIndex("CourseId", "OrderIndex")
+                        .IsUnique();
+
+                    b.ToTable("course_course_sections", (string)null);
+                });
+
+            modelBuilder.Entity("VideoCourse.Backend.Domain.Entities.CourseSection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<int?>("CreatedUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<DateTimeOffset?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.Property<int?>("UpdatedUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("updated_user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Title")
+                        .IsUnique();
+
+                    b.ToTable("course_sections", (string)null);
+                });
+
+            modelBuilder.Entity("VideoCourse.Backend.Domain.Entities.CourseSectionVideo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourseSectionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("course_section_id");
 
                     b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
@@ -122,11 +226,11 @@ namespace VideoCourse.Backend.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("CourseSectionId");
 
                     b.HasIndex("VideoId");
 
-                    b.ToTable("course_videos", (string)null);
+                    b.ToTable("course_section_videos", (string)null);
                 });
 
             modelBuilder.Entity("VideoCourse.Backend.Domain.Entities.Payment", b =>
@@ -262,6 +366,9 @@ namespace VideoCourse.Backend.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.ToTable("users", (string)null);
                 });
 
@@ -374,6 +481,9 @@ namespace VideoCourse.Backend.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Title")
+                        .IsUnique();
+
                     b.ToTable("videos", (string)null);
                 });
 
@@ -435,21 +545,40 @@ namespace VideoCourse.Backend.Infrastructure.Migrations
                     b.ToTable("video_progresses", (string)null);
                 });
 
-            modelBuilder.Entity("VideoCourse.Backend.Domain.Entities.CourseVideo", b =>
+            modelBuilder.Entity("VideoCourse.Backend.Domain.Entities.CourseCourseSection", b =>
                 {
                     b.HasOne("VideoCourse.Backend.Domain.Entities.Course", "Course")
-                        .WithMany("CourseVideos")
+                        .WithMany("CourseCourseSections")
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("VideoCourse.Backend.Domain.Entities.Video", "Video")
-                        .WithMany("VideoCourses")
-                        .HasForeignKey("VideoId")
+                    b.HasOne("VideoCourse.Backend.Domain.Entities.CourseSection", "Section")
+                        .WithMany("CourseRelations")
+                        .HasForeignKey("CourseSectionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Course");
+
+                    b.Navigation("Section");
+                });
+
+            modelBuilder.Entity("VideoCourse.Backend.Domain.Entities.CourseSectionVideo", b =>
+                {
+                    b.HasOne("VideoCourse.Backend.Domain.Entities.CourseSection", "CourseSection")
+                        .WithMany("CourseSectionVideos")
+                        .HasForeignKey("CourseSectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("VideoCourse.Backend.Domain.Entities.Video", "Video")
+                        .WithMany("CourseSectionVideos")
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CourseSection");
 
                     b.Navigation("Video");
                 });
@@ -505,9 +634,16 @@ namespace VideoCourse.Backend.Infrastructure.Migrations
 
             modelBuilder.Entity("VideoCourse.Backend.Domain.Entities.Course", b =>
                 {
-                    b.Navigation("CourseVideos");
+                    b.Navigation("CourseCourseSections");
 
                     b.Navigation("EnrolledUsers");
+                });
+
+            modelBuilder.Entity("VideoCourse.Backend.Domain.Entities.CourseSection", b =>
+                {
+                    b.Navigation("CourseRelations");
+
+                    b.Navigation("CourseSectionVideos");
                 });
 
             modelBuilder.Entity("VideoCourse.Backend.Domain.Entities.User", b =>
@@ -521,9 +657,9 @@ namespace VideoCourse.Backend.Infrastructure.Migrations
 
             modelBuilder.Entity("VideoCourse.Backend.Domain.Entities.Video", b =>
                 {
-                    b.Navigation("UserProgresses");
+                    b.Navigation("CourseSectionVideos");
 
-                    b.Navigation("VideoCourses");
+                    b.Navigation("UserProgresses");
                 });
 #pragma warning restore 612, 618
         }

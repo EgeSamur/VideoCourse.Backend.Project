@@ -53,11 +53,12 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICourseRepository, CourseRepository>();
         services.AddScoped<ICourseSectionRepository, CourseSectionRepository>();
-        services.AddScoped<ISectionVideoRepository, SectionVideoRepository>();
+        services.AddScoped<ICourseSectionVideoRepository, CourseSectionVideoRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IUserCourseRepository, UserCourseRepository>();
         services.AddScoped<IVideoProgressRepository, VideoProgressRepository>();
         services.AddScoped<IVideoRepository, VideoRepository>();
+        services.AddScoped<ICourseCourseSectionRepository, CourseCourseSectionRepository>();
         
         
         

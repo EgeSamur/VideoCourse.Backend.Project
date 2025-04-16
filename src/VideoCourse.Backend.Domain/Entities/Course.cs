@@ -11,6 +11,6 @@ public class Course : BaseEntity
     public bool IsActive { get; set; } = true;
 
     // Navigation properties
-    public ICollection<CourseSection> Sections { get; set; } = new List<CourseSection>();
-    public ICollection<UserCourse> EnrolledUsers { get; set; } = new List<UserCourse>();
+    public ICollection<CourseCourseSection> CourseCourseSections { get; set; }
+    public ICollection<UserCourse> EnrolledUsers { get; set; } 
 }

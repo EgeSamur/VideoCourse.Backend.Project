@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Office.CustomUI;
+using Microsoft.EntityFrameworkCore;
 using VideoCourse.Backend.Application.Abstractions.Repositories;
 using VideoCourse.Backend.Application.Common.Helpers;
 using VideoCourse.Backend.Application.Features.CourseSections.DTOs;
@@ -22,168 +24,35 @@ public class CourseSectionService : ICourseSectionService
         _mapper = mapper;
         _unitOfWork = unitOfWork;
     }
-
     public async Task<IResult> CreateAsync(CourseSectionCreateDto dto)
     {
-        try
+        var section = new CourseSection()
         {
-            // Validate all video IDs with a single query
-            if (dto.VideoIds != null && dto.VideoIds.Any())
-            {
-                var existingVideoIds = await _unitOfWork.VideoRepository.GetListWithProjectionAsync(
-                    selector: v => v.Id,
-                    predicate: v => dto.VideoIds.Contains(v.Id));
-
-                // Convert to list to ensure we can use Count property and other operations
-                var existingIdsList = existingVideoIds.Items.ToList();
-
-                if (existingIdsList.Count != dto.VideoIds.Count)
-                {
-                    var missingIds = dto.VideoIds.Except(existingIdsList).ToList();
-                    throw new NotFoundException($"Video(s) with ID(s) {string.Join(", ", missingIds)} not found.");
-                }
-            }
-
-            // Create the course section
-            var section = new CourseSection
-            {
-                Title = dto.Title,
-                Description = dto.Description,
-                OrderIndex = dto.OrderIndex
-            };
-
-            await _unitOfWork.CourseSectionRepository.AddAsync(section);
-            await _unitOfWork.SaveChangesAsync();
-
-            // Now that we have the section ID, add the video associations in bulk
-            if (dto.VideoIds != null && dto.VideoIds.Any())
-            {
-                // Create all section video objects at once
-                var sectionVideos = new List<SectionVideo>();
-
-                for (int i = 0; i < dto.VideoIds.Count; i++)
-                {
-                    sectionVideos.Add(new SectionVideo
-                    {
-                        CourseSectionId = section.Id,
-                        VideoId = dto.VideoIds[i],
-                        OrderIndex = i
-                    });
-                }
-
-                // Add all video associations in bulk
-                foreach (var sectionVideo in sectionVideos)
-                {
-                    await _unitOfWork.SectionVideoRepository.AddAsync(sectionVideo);
-                }
-
-                // Save all video associations at once
-                await _unitOfWork.SaveChangesAsync();
-                
-            }
-            return new SuccessResult(MessageHelper.Created("Course Section"));
-        }
-        catch (Exception)
-        {
-            _unitOfWork.Rollback();
-            throw;
-        }
+            Title = dto.Title,
+            Description = dto.Description
+        };
+        await _unitOfWork.CourseSectionRepository.AddAsync(section);
+        await _unitOfWork.SaveChangesAsync();
+        return new SuccessResult(MessageHelper.Created("Course Section"));
     }
     public async Task<IResult> UpdateAsync(CourseSectionUpdateDto dto)
     {
-        try
-        {
-            var section = await _unitOfWork.CourseSectionRepository.GetAsync(s => s.Id == dto.Id, enableTracking: true);
-            if (section == null)
-                throw new NotFoundException(MessageHelper.NotFound("Course Section"));
-
-            // Validate all video IDs with a single query
-            if (dto.VideoIds != null && dto.VideoIds.Any())
-            {
-                var existingVideoIds = await _unitOfWork.VideoRepository.GetListWithProjectionAsync(
-                    selector: v => v.Id,
-                    predicate: v => dto.VideoIds.Contains(v.Id));
-
-                var existingIdsList = existingVideoIds.Items.ToList();
-
-                if (existingIdsList.Count != dto.VideoIds.Count)
-                {
-                    var missingIds = dto.VideoIds.Except(existingIdsList).ToList();
-                    throw new NotFoundException($"Video(s) with ID(s) {string.Join(", ", missingIds)} not found.");
-                }
-            }
-
-            // Update section properties
-            section.Title = dto.Title;
-            section.Description = dto.Description;
-            section.OrderIndex = dto.OrderIndex;
-            await _unitOfWork.SaveChangesAsync();
-
-            // Update video associations - get all current video associations in one query
-            var currentSectionVideos = await _unitOfWork.SectionVideoRepository.GetListAsync(
-                sv => sv.CourseSectionId == section.Id);
-
-            // Delete all existing video associations if we're changing them
-            if (dto.VideoIds != null)
-            {
-                // Get the current video IDs for comparison
-                var currentVideoIds = currentSectionVideos.Items.Select(sv => sv.VideoId).ToList();
-
-                // Only proceed with video changes if there's actually a difference
-                if (!dto.VideoIds.OrderBy(id => id).SequenceEqual(currentVideoIds.OrderBy(id => id)))
-                {
-                    // Remove all existing video associations
-                    foreach (var sectionVideo in currentSectionVideos.Items)
-                    {
-                        await _unitOfWork.SectionVideoRepository.HardDeleteAsync(sectionVideo);
-                    }
-                    await _unitOfWork.SaveChangesAsync();
-
-                    // Add new video associations
-                    if (dto.VideoIds.Any())
-                    {
-                        // Create all section video objects at once
-                        var newSectionVideos = new List<SectionVideo>();
-
-                        for (int i = 0; i < dto.VideoIds.Count; i++)
-                        {
-                            newSectionVideos.Add(new SectionVideo
-                            {
-                                CourseSectionId = section.Id,
-                                VideoId = dto.VideoIds[i],
-                                OrderIndex = i
-                            });
-                        }
-
-                        // Add all video associations in bulk
-                        foreach (var newSectionVideo in newSectionVideos)
-                        {
-                            await _unitOfWork.SectionVideoRepository.AddAsync(newSectionVideo);
-                        }
-
-                        // Save all changes at once
-                        await _unitOfWork.SaveChangesAsync();
-                    }
-                }
-            }
-
-            return new SuccessResult(MessageHelper.Updated("Course Section"));
-        }
-        catch (Exception)
-        {
-            _unitOfWork.Rollback();
-            throw;
-        }
+        var data = await _unitOfWork.CourseSectionRepository.GetAsync(predicate: i => i.Id == dto.Id, enableTracking: true);
+        if (data == null)
+            throw new NotFoundException(MessageHelper.NotFound("Course Section"));
+        data.Title = dto.Title;
+        data.Description = dto.Description;
+        await _unitOfWork.SaveChangesAsync();
+        return new SuccessResult(MessageHelper.Updated("Course Section"));
     }
     public async Task<IResult> DeleteAsync(int id)
     {
-        var courseSection = await _unitOfWork.CourseSectionRepository.GetAsync(i => i.Id == id);
-        if (courseSection == null) 
-            throw new NotFoundException(MessageHelper.NotFound("VideoSection"));
-        await _unitOfWork.CourseSectionRepository.DeleteAsync(courseSection);
+        var data = await _unitOfWork.CourseSectionRepository.GetAsync(predicate: i => i.Id == id, enableTracking: true);
+        if (data == null)
+            throw new NotFoundException(MessageHelper.NotFound("Course Section"));
+        await _unitOfWork.CourseSectionRepository.DeleteAsync(data);
         await _unitOfWork.SaveChangesAsync();
         return new SuccessResult(MessageHelper.Deleted("Course Section"));
-
     }
     public async Task<IDataResult<CourseSectionDto>> GetByIdAsync(int id)
     {
@@ -191,12 +60,11 @@ public class CourseSectionService : ICourseSectionService
             predicate: i => i.Id == id,
             selector: x => new CourseSectionDto()
             {
-                CourseId = x.CourseId,
+                CourseSectionId = x.Id,
                 Title = x.Title,
                 Description = x.Description,
-                OrderIndex = x.OrderIndex,
-                Videos = x.SectionVideos
-                .OrderBy(sv => sv.Id)
+                Videos = x.CourseSectionVideos
+                .OrderBy(sv => sv.OrderIndex)
                 .Select(sv => new VideoDto()
                 {
                     Id = sv.Video.Id,
@@ -218,12 +86,11 @@ public class CourseSectionService : ICourseSectionService
         var videoSections = await _unitOfWork.CourseSectionRepository.GetListWithProjectionAsync(
             selector: i => new CourseSectionDto()
             {
-                CourseId = i.CourseId,
+                CourseSectionId = i.Id,
                 Title = i.Title,
                 Description = i.Description,
-                OrderIndex = i.OrderIndex,
-                Videos = i.SectionVideos
-                .OrderBy(sv => sv.Id)
+                Videos = i.CourseSectionVideos
+                .OrderBy(sv => sv.OrderIndex)
                 .Select(sv => new VideoDto()
                 {
                     Id = sv.Video.Id,
@@ -239,123 +106,104 @@ public class CourseSectionService : ICourseSectionService
     }
     public async Task<IResult> AddVideosToCourseSection(AddVideosCourseSectionDto dto)
     {
-        // Bölümün var olup olmadığını kontrol et
-        var section = await _unitOfWork.CourseSectionRepository.GetAsync(s => s.Id == dto.CourseSectionId);
-        if (section == null)
+        // video idleri checkbox şeklinde olmalı knkaaa mesela 1 2, var 3 4 5 eklencek 1,2,3,4,5 gelmeli.
+        var courseSection = await _unitOfWork.CourseSectionRepository.GetAsync(predicate: i => i.Id == dto.CourseSectionId,
+            include: x => x.Include(i => i.CourseSectionVideos)
+            .ThenInclude(i => i.Video), enableTracking: true);
+        if (courseSection == null)
             return new ErrorResult(MessageHelper.NotFound("Course Section"));
-
-        // Tüm video ID'lerini tek sorguda doğrula
-        if (dto.VideoIds == null || !dto.VideoIds.Any())
-            return new ErrorResult("No video IDs provided.");
-
-        var existingVideoIds = await _unitOfWork.VideoRepository.GetListWithProjectionAsync(
-            selector: v => v.Id,
-            predicate: v => dto.VideoIds.Contains(v.Id));
-
-        var existingIdsList = existingVideoIds.Items.ToList();
-
-        if (existingIdsList.Count != dto.VideoIds.Count)
+        courseSection.CourseSectionVideos.Clear();
+        var order = 0;
+        foreach (var videoId in dto.VideoIds)
         {
-            var missingIds = dto.VideoIds.Except(existingIdsList).ToList();
-            return new ErrorResult($"Video(s) with ID(s) {string.Join(", ", missingIds)} not found.");
-        }
-
-        // Bölümdeki mevcut videoları çek
-        var existingSectionVideos = await _unitOfWork.SectionVideoRepository.GetListAsync(
-            sv => sv.CourseSectionId == dto.CourseSectionId);
-
-        // Mevcut video ID'lerini al
-        var existingSectionVideoIds = existingSectionVideos.Items.Select(sv => sv.VideoId).ToList();
-
-        // Sadece yeni eklenecek videoları belirle (duplikasyonu önle)
-        var newVideoIds = dto.VideoIds.Except(existingSectionVideoIds).ToList();
-
-        if (!newVideoIds.Any())
-            return new SuccessResult("All videos are already associated with this section.");
-
-        // Yeni eklenecek videolar için başlangıç sıra numarasını belirle
-        int startOrderIndex = 0;
-
-        if (existingSectionVideos.Items.Any())
-            startOrderIndex = existingSectionVideos.Items.Max(sv => sv.OrderIndex) + 1;
-
-        // Yeni videoları bölüme ekle
-        var newSectionVideos = new List<SectionVideo>();
-        int orderIndex = startOrderIndex;
-
-        foreach (var videoId in newVideoIds)
-        {
-            newSectionVideos.Add(new SectionVideo
+            courseSection.CourseSectionVideos.Add(new CourseSectionVideo()
             {
-                CourseSectionId = dto.CourseSectionId,
+                CourseSectionId = courseSection.Id,
                 VideoId = videoId,
-                OrderIndex = orderIndex++
+                OrderIndex = order
             });
+            order++;
         }
-
-        // Toplu olarak ekle
-        foreach (var sectionVideo in newSectionVideos)
-        {
-            await _unitOfWork.SectionVideoRepository.AddAsync(sectionVideo);
-        }
-
         await _unitOfWork.SaveChangesAsync();
 
-        return new SuccessResult($"{newVideoIds.Count} video(s) added to the course section.");
+     
+        return new SuccessResult(MessageHelper.Updated("Video Section Videos"));
     }
     public async Task<IResult> DeleteVideoFromCourseSectionAsync(DeleteVideosFromCourseSectionDto dto)
     {
-        // Bölümün var olup olmadığını kontrol et
-        var section = await _unitOfWork.CourseSectionRepository.GetAsync(s => s.Id == dto.CourseSectionId);
+        var section = await _unitOfWork.CourseSectionRepository.GetAsync(
+            predicate: s => s.Id == dto.CourseSectionId,
+            include: x => x.Include(s => s.CourseSectionVideos),
+            enableTracking: true);
+
         if (section == null)
             return new ErrorResult(MessageHelper.NotFound("Course Section"));
 
         if (dto.VideoIds == null || !dto.VideoIds.Any())
             return new ErrorResult("No video IDs provided.");
 
-        // Bölüm-video ilişkilerini kontrol et
-        var sectionVideos = await _unitOfWork.SectionVideoRepository.GetListAsync(
-            sv => sv.CourseSectionId == dto.CourseSectionId && dto.VideoIds.Contains(sv.VideoId));
+        var initialCount = section.CourseSectionVideos.Count;
 
-        if (!sectionVideos.Items.Any())
-            return new ErrorResult("None of the provided video IDs are associated with this section.");
+        // Sadece eşleşen videoId’leri ilişkiden çıkar
+        section.CourseSectionVideos = section.CourseSectionVideos
+            .Where(sv => !dto.VideoIds.Contains(sv.VideoId))
+            .OrderBy(sv => sv.OrderIndex) // Sıralama bozulmasın
+            .ToList();
 
-        var foundVideoIds = sectionVideos.Items.Select(sv => sv.VideoId).ToList();
-        var notFoundVideoIds = dto.VideoIds.Except(foundVideoIds).ToList();
+        // OrderIndex'leri yeniden sırala
+        int order = 0;
+        foreach (var video in section.CourseSectionVideos)
+            video.OrderIndex = order++;
 
-        if (notFoundVideoIds.Any())
-        {
-            return new SuccessResult($"Warning: Video(s) with ID(s) {string.Join(", ", notFoundVideoIds)} were not found in this section.");
-        }
-
-        // İlişkileri sil
-        foreach (var sectionVideo in sectionVideos.Items)
-        {
-            await _unitOfWork.SectionVideoRepository.HardDeleteAsync(sectionVideo);
-        }
         await _unitOfWork.SaveChangesAsync();
 
-        // Kalan videoların sırasını güncelle
-        var remainingVideos = await _unitOfWork.SectionVideoRepository.GetListAsync(
-            sv => sv.CourseSectionId == dto.CourseSectionId,
-            orderBy: q => q.OrderBy(sv => sv.OrderIndex));
-
-        if (remainingVideos.Items.Any())
-        {
-            int orderIndex = 0;
-            foreach (var video in remainingVideos.Items)
-            {
-                video.OrderIndex = orderIndex++;
-            }
-            await _unitOfWork.SaveChangesAsync();
-        }
-
-        return new SuccessResult($"{sectionVideos.Items.Count} video(s) removed from section.");
+        var deletedCount = initialCount - section.CourseSectionVideos.Count;
+        return new SuccessResult($"{deletedCount} video(s) removed from section.");
     }
+    public async Task<IDataResult<CourseSectionDto>> SwapSectionVideos(SwapSectionVideosDto dto)
+    {
+        var section = await _unitOfWork.CourseSectionRepository.GetAsync(
+            predicate: s => s.Id == dto.CourseSectionId,
+            include: x => x.Include(s => s.CourseSectionVideos)
+                           .ThenInclude(v => v.Video),
+            enableTracking: true);
+
+        if (section == null)
+            return new ErrorDataResult<CourseSectionDto>(MessageHelper.NotFound("Course Section"));
+
+        var firstVideo = section.CourseSectionVideos.FirstOrDefault(v => v.VideoId == dto.FirstVideoId);
+        var secondVideo = section.CourseSectionVideos.FirstOrDefault(v => v.VideoId == dto.SecondVideoId);
+
+        if (firstVideo == null || secondVideo == null)
+            return new ErrorDataResult<CourseSectionDto>(MessageHelper.NotFound("One or both videos"));
+
+        // OrderIndex swap
+        (firstVideo.OrderIndex, secondVideo.OrderIndex) = (secondVideo.OrderIndex, firstVideo.OrderIndex);
+
+        await _unitOfWork.SaveChangesAsync();
+
+        // Güncellenmiş listeyi dön
+        var updatedDto = new CourseSectionDto
+        {
+            Title = section.Title,
+            Description = section.Description,
+            Videos = section.CourseSectionVideos
+                .OrderBy(v => v.OrderIndex) // burada ID yerine sıralama esas alınmalı
+                .Select(v => new VideoDto
+                {
+                    Id = v.Video.Id,
+                    Title = v.Video.Title,
+                    Description = v.Video.Description,
+                    ThumbnailUrl = v.Video.ThumbnailUrl,
+                    VideoUrl = v.Video.VideoUrl,
+                    DurationInSeconds = v.Video.DurationInSeconds
+                }).ToList()
+        };
+
+        return new SuccessDataResult<CourseSectionDto>(updatedDto, MessageHelper.Updated("Section Videos"));
+    }
+
 }
 
-
-// sectiondan tane ile video silme tane ile video ekleme 
-// courseden tane ile section çıkartma tane ile video ekleme 
+// önce section oluşturulur sonra sectionlara video eklenir. videolar için ekle ve update et oluşturacağız
 // section ve courseler hard delete yapılamaz soft delete
-// video sıralaması için frontEnd önemli sıra değiştirmek için ne yapacağımızı düşüneceğiz.

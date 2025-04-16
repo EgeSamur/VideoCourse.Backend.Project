@@ -12,8 +12,8 @@ namespace VideoCourse.Backend.Infrastructure.Persistence.Repositories
 {
 
     // SectionVideo Repository Implementation
-    public class SectionVideoRepository : RepositoryBase<SectionVideo, ApplicationDbContext>, ISectionVideoRepository
+    public class CourseSectionVideoRepository : RepositoryBase<CourseSectionVideo, ApplicationDbContext>, ICourseSectionVideoRepository
     {
-        public SectionVideoRepository(ApplicationDbContext context) : base(context) { }
+        public CourseSectionVideoRepository(ApplicationDbContext context) : base(context) { }
     }
 }
